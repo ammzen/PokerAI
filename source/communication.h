@@ -1,6 +1,9 @@
 #ifndef _COMMUNICATION_H
 #define _COMMUNICATION_H 1;
 
+#include <string>
+using namespace std;
+
 void     ParseMsgSeat(string msg);
 void    ParseMsgBlind(string msg);
 void     ParseMsgHold(string msg);
