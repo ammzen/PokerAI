@@ -1,0 +1,6 @@
+/target
+*.o
+test.cpp
+test
+*~
+.DS_Store
