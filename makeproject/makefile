@@ -1,8 +1,5 @@
-game : game.o
-	cc -o ../target/game game.o;
-
-game.o : ../source/game.cpp
-	cc -c ../source/game.cpp
+game : 
+	g++ ../source/game.cpp ../source/communication.cpp ../source/glob.cpp -o ../target/game 
 
 clean :
 	rm -f ../target/game *.o

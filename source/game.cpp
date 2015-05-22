@@ -6,29 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-int m_socket_id = -1;
-/** 输出重定向输出到文件 */
-FILE * logfile;
-
-/* 处理server的消息 */
-int on_server_message(int length, const char* buffer)
-{
-    fprintf(logfile, "Recieve Data From Server\n"
-                    "**************************\n"
-                    "%s\n"
-                    "**************************\n", buffer);
-
-    return 0;
-}
+#include "glob.h"
+#include "communication.h"
 
 int main(int argc, char *argv[])
-{    
+{
+    InitGlob();
+
     logfile = fopen("mylog.txt", "a+");
     
     fprintf(logfile, "*********Program begin.*********\n");
-
-    fprintf(logfile, "argc=%d\n", argc);
 
     if (argc != 6)
     {
@@ -42,6 +29,7 @@ int main(int argc, char *argv[])
     in_addr_t my_ip = inet_addr(argv[3]);
     in_port_t my_port = htons(atoi(argv[4])); 
     int my_id = atoi(argv[5]);
+    myself_pid = my_id;
 
     /** 创建socket */
     m_socket_id = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,23 +76,25 @@ int main(int argc, char *argv[])
     {
         char buffer[1024] = {'\0'};
         int length = recv(m_socket_id, buffer, sizeof(buffer) - 1, 0);
-        fprintf(logfile, "length = %d\n", length);
         if(length > 0)
-        { 
-        /** on_server_message返回-1（比如收到game over消息），则跳出循环，关闭socket，安全退出程序 */
-            if (-1 == on_server_message(length, buffer))
-            {
+        {
+            /** OnServerMessage返回值 */
+            int result = OnServerMessage(length, buffer);
+            /** 收到game over消息，则跳出循环，关闭socket，安全退出程序  */
+            if (result == GAMEOVER)
                 break;
-            }
+            /** 收到MSG_INQUIRE，表示未能正确解析inquire消息，发送弃牌消息 */
+            if (result == MSG_INQUIRE)
+                SendActionMsg(FOLD, 0);
         } 
     }
 
     /** 关闭socket */
     close(m_socket_id);
 
+    fprintf(logfile, "*********Program end.*********\n");
     /** 关闭重定向 */
     fclose(logfile);
 
     return 0;
-    fprintf(logfile, "*********Program end.*********\n");
 }
